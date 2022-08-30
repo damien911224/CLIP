@@ -232,6 +232,8 @@ class VisionTransformer(nn.Module):
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
 
+        print(x.shape)
+
         x = self.ln_post(x[:, 0, :])
 
         if self.proj is not None:
