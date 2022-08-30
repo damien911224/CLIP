@@ -222,6 +222,7 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv1(x)  # shape = [*, width, grid, grid]
+        N, C, G, G = x.shape
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
         x = torch.cat([self.class_embedding.to(x.dtype) + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device), x], dim=1)  # shape = [*, grid ** 2 + 1, width]
@@ -232,12 +233,18 @@ class VisionTransformer(nn.Module):
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
 
-        print(x.shape)
+        # x = self.ln_post(x[:, 0, :])
+        #
+        # if self.proj is not None:
+        #     x = x @ self.proj
 
-        x = self.ln_post(x[:, 0, :])
-
+        x = self.ln_post(x[:, 1:])
         if self.proj is not None:
             x = x @ self.proj
+
+        x = torch.reshape(x, (N, G, G, -1)).permute(0, 3, 1, 2)
+        x = F.adaptive_avg_pool2d(x, 4)
+        print(x.shape)
 
         return x
 
