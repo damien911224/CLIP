@@ -243,8 +243,7 @@ class VisionTransformer(nn.Module):
             x = x @ self.proj
 
         x = torch.reshape(x, (N, G, G, -1)).permute(0, 3, 1, 2)
-        x = F.adaptive_avg_pool2d(x, 4)
-        print(x.shape)
+        x = F.adaptive_avg_pool2d(x, 4).permute(0, 2, 3, 1)
 
         return x
 
